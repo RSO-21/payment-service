@@ -3,11 +3,14 @@ from app.routes import router as payments_router
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db, engine, Base
+from prometheus_fastapi_instrumentator import Instrumentator
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Payments Microservice", version="1.0.0")
 app.include_router(payments_router, prefix="/payments")
+
+Instrumentator().instrument(app).expose(app)
 
 @app.get("/health")
 def health_check(db: Session = Depends(get_db)):
