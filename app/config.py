@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     pg_port: int = Field(5432, validation_alias="PGPORT")
     pg_database: str = Field(validation_alias="PGDATABASE")
 
+    payment_grpc_host: str = Field(validation_alias="PAYMENT_GRPC_HOST")
+    payment_grpc_port: int = Field(50051, validation_alias="PAYMENT_GRPC_PORT")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package payment;
+
+service PaymentService {
+    rpc CreatePayment(CreatePaymentRequest) returns (PaymentResponse);
+    rpc ConfirmPayment(ConfirmPaymentRequest) returns (PaymentResponse);
+}
+
+message CreatePaymentRequest {
+    int32 order_id = 1;
+    int32 user_id = 2;
+    double amount = 3;
+    string currency = 4;
+    string payment_method = 5;
+    string provider = 6;
+}
+
+message ConfirmPaymentRequest {
+    int32 payment_id = 1;
+    string status = 2; // "PAID", "FAILED"
+}
+
+message PaymentResponse {
+    int32 payment_id = 1;
+    int32 order_id = 2;
+    string status = 3;
+}

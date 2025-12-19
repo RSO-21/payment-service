@@ -5,9 +5,13 @@ click==8.3.1
 colorama==0.4.6
 fastapi==0.123.4
 greenlet==3.2.4
+grpcio==1.76.0
+grpcio-tools==1.76.0
 h11==0.16.0
 idna==3.11
 prometheus-fastapi-instrumentator==7.0.0
+prometheus_client==0.23.1
+protobuf==6.33.2
 psycopg2-binary==2.9.11
 pydantic==2.12.5
 pydantic-settings==2.12.0
