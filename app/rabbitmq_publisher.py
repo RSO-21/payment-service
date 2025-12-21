@@ -1,5 +1,8 @@
 import json
 import pika
+import os
+
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
 
 # 1. Setup global connection/channel (or use a singleton pattern)
 def get_channel():
@@ -13,7 +16,7 @@ def publish_payment_confirmed(payment_id: int, order_id: int, status: str) -> No
     try:
         # Set a 5-second timeout so your web app doesn't hang
         parameters = pika.ConnectionParameters(
-            host="localhost", 
+            host=RABBITMQ_HOST, 
             heartbeat=600, 
             blocked_connection_timeout=300,
             connection_attempts=3,
