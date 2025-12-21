@@ -1,8 +1,10 @@
 # payment_service/server.py
 import grpc
 from concurrent import futures
-from app import models, database, payment_pb2, payment_pb2_grpc
+from app import models, database
+from app.grpc import payment_pb2_grpc, payment_pb2
 from sqlalchemy.orm import Session
+from app.rabbitmq_publisher import publish_payment_confirmed
 
 class PaymentServicer(payment_pb2_grpc.PaymentServiceServicer):
 
@@ -39,12 +41,15 @@ class PaymentServicer(payment_pb2_grpc.PaymentServiceServicer):
         payment.payment_status = request.status
         db.commit()
         db.refresh(payment)
+
+        publish_payment_confirmed(payment.id, payment.order_id, payment.payment_status)
+
         return payment_pb2.PaymentResponse(payment_id=payment.id, order_id=payment.order_id, status=payment.payment_status)
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     payment_pb2_grpc.add_PaymentServiceServicer_to_server(PaymentServicer(), server)
-    server.add_insecure_port('[::]:50052')
+    server.add_insecure_port('[::]:50051')
     server.start()
     server.wait_for_termination()
 

@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from app.routes import router as payments_router
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from app.database import get_db, engine, Base
+from app.database import get_db_session as get_db, engine, Base
 from prometheus_fastapi_instrumentator import Instrumentator
 
 Base.metadata.create_all(bind=engine)

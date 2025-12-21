@@ -1,11 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends
-from app.schemas import PaymentCreate, PaymentResponse, PaymentStatusUpdate
-from app.database import get_db
-from app import models
+import logging
 from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app import models
+from app.database import get_db_session as get_db
+from app.rabbitmq_publisher import publish_payment_confirmed
+from app.schemas import PaymentCreate, PaymentResponse, PaymentStatusUpdate
+
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.get("/", response_model=List[PaymentResponse])
 def list_payments(db: Session = Depends(get_db)):
@@ -34,31 +39,19 @@ def notify_order_service(order_id: int):
     # TODO: replace with real HTTP/gRPC call later
     print(f"[PAYMENT] Order {order_id} marked as PAID")
 
-@router.patch("/{payment_id}/status", response_model=PaymentResponse)
-def update_payment_status(
-    payment_id: int,
-    update: PaymentStatusUpdate,
-    db: Session = Depends(get_db)
-):
-    payment = db.query(models.Payment).filter(
-        models.Payment.id == payment_id
-    ).first()
-
+@router.post("/{payment_id}/confirm", response_model=PaymentResponse)
+def confirm_payment(payment_id: int, db: Session = Depends(get_db)):
+    payment = db.query(models.Payment).filter(models.Payment.id == payment_id).first()
     if not payment:
         raise HTTPException(status_code=404, detail="Payment not found")
-
-    # Optional: validate allowed transitions
-    allowed_statuses = {"PENDING", "PAID", "FAILED"}
-    if update.payment_status not in allowed_statuses:
-        raise HTTPException(status_code=400, detail="Invalid status")
-
-    payment.payment_status = update.payment_status
+    
+    payment.payment_status = "PAID"
     db.commit()
     db.refresh(payment)
 
-    # 🔔 OPTIONAL (recommended):
-    # notify Order Service if payment succeeded
-    if update.payment_status == "PAID":
-        notify_order_service(payment.order_id)
-
+    try:
+        publish_payment_confirmed(payment.id, payment.order_id, payment.payment_status)
+    except Exception as exc:
+        logger.error("Failed to publish payment_confirmed event: %s", exc, exc_info=True)
+    
     return payment
