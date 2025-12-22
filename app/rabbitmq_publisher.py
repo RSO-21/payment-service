@@ -1,6 +1,7 @@
 import json
 import pika
 import os
+from typing import Optional
 
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
 
@@ -11,7 +12,7 @@ def get_channel():
     channel.queue_declare(queue="payment_confirmed", durable=True)
     return connection, channel
 
-def publish_payment_confirmed(payment_id: int, order_id: int, status: str) -> None:
+def publish_payment_confirmed(payment_id: int, order_id: int, status: str, tenant_id: Optional[str] = None) -> None:
     connection = None
     try:
         # Set a 5-second timeout so your web app doesn't hang
@@ -32,6 +33,8 @@ def publish_payment_confirmed(payment_id: int, order_id: int, status: str) -> No
             "order_id": order_id,
             "payment_status": status,
         }
+        if tenant_id is not None:
+            event["tenant_id"] = tenant_id
 
         channel.basic_publish(
             exchange="",

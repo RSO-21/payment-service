@@ -1,5 +1,5 @@
 # app/database.py
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from app.config import settings
 
@@ -14,5 +14,9 @@ class Base(DeclarativeBase):
     pass
 
 # Dependency for FastAPI routes
-def get_db_session():
-    return SessionLocal()
+def get_db_session(schema: str = None):
+    session = SessionLocal()
+    if schema:
+        # Set search_path for this session
+        session.execute(text(f"SET search_path TO {schema}"))
+    return session

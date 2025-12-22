@@ -9,7 +9,10 @@ from app.rabbitmq_publisher import publish_payment_confirmed
 class PaymentServicer(payment_pb2_grpc.PaymentServiceServicer):
 
     def CreatePayment(self, request, context):
-        db = database.get_db_session()
+        metadata = dict(context.invocation_metadata())
+        tenant_id = metadata.get('x-tenant-id', 'public')
+        
+        db = database.get_db_session(tenant_id)
 
         payment = models.Payment(
             order_id=request.order_id,
