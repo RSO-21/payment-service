@@ -7,7 +7,7 @@ from decimal import Decimal
 ## Order schemas
 class PaymentCreate(BaseModel):
     order_id: int
-    user_id: int
+    user_id: str
     amount: Decimal
     currency: str
     payment_method: str
@@ -16,7 +16,7 @@ class PaymentCreate(BaseModel):
 class PaymentResponse(BaseModel):
     id: int
     order_id: int
-    user_id: int
+    user_id: str
     amount: Decimal
     currency: str
     payment_method: str

@@ -10,7 +10,7 @@ class Payment(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     order_id = Column(Integer, nullable=False)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(String(36), nullable=False)
 
     amount = Column(Numeric(10, 2), nullable=False)
     currency = Column(String(10), nullable=False, default="EUR")
