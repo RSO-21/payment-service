@@ -16,7 +16,9 @@ class Base(DeclarativeBase):
 # Dependency for FastAPI routes
 def get_db_session(schema: str = None):
     session = SessionLocal()
-    if schema:
+    try:
         # Set search_path for this session
         session.execute(text(f"SET search_path TO {schema}"))
-    return session
+        yield session
+    finally:
+        session.close()
