@@ -12,7 +12,7 @@ def get_channel():
     channel.queue_declare(queue="payment_confirmed", durable=True)
     return connection, channel
 
-def publish_payment_confirmed(payment_id: int, order_id: int, status: str, tenant_id: Optional[str] = None) -> None:
+def publish_payment_confirmed(payment_id: int, order_id: int, status: str, user_id: str, amount: float, tenant_id: Optional[str] = None) -> None:
     connection = None
     try:
         # Set a 5-second timeout so your web app doesn't hang
@@ -32,6 +32,8 @@ def publish_payment_confirmed(payment_id: int, order_id: int, status: str, tenan
             "payment_id": payment_id,
             "order_id": order_id,
             "payment_status": status,
+            "user_id": user_id,
+            "amount": amount
         }
         if tenant_id is not None:
             event["tenant_id"] = tenant_id

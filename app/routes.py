@@ -58,7 +58,14 @@ def confirm_payment(payment_id: int, db: Session = Depends(get_db_with_schema), 
     db.refresh(payment)
 
     try:
-        publish_payment_confirmed(payment.id, payment.order_id, payment.payment_status, tenant_id=tenant_id)
+        publish_payment_confirmed(
+            payment.id,
+            payment.order_id,
+            payment.payment_status,
+            user_id=str(payment.user_id),
+            amount=float(payment.amount),
+            tenant_id=tenant_id
+        )
     except Exception as exc:
         logger.error("Failed to publish payment_confirmed event: %s", exc, exc_info=True)
     
