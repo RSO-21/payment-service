@@ -17,7 +17,8 @@ def get_tenant_id(x_tenant_id: Optional[str] = Header(None)) -> str:
     return x_tenant_id or "public"
 
 def get_db_with_schema(tenant_id: str = Depends(get_tenant_id)):
-    yield from get_db(schema=tenant_id)
+    with get_db(schema=tenant_id) as db:
+        yield db
 
 @router.get("/", response_model=List[PaymentResponse])
 def list_payments(db: Session = Depends(get_db_with_schema)):
