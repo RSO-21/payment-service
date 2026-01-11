@@ -19,8 +19,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(payments_router, prefix="/payments")
-
 Instrumentator().instrument(app).expose(app)
 
 @app.get("/health")
@@ -34,3 +32,5 @@ def health_check(db: Session = Depends(get_db)):
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Payments Microservice"}
+
+app.include_router(payments_router)

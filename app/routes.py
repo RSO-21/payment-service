@@ -21,7 +21,7 @@ def get_db_with_schema(tenant_id: str = Depends(get_tenant_id)):
     with get_db(schema=tenant_id) as db:
         yield db
 
-@router.get("/", response_model=List[PaymentResponse])
+@router.get("/list_payments", response_model=List[PaymentResponse])
 def list_payments(db: Session = Depends(get_db_with_schema)):
     return db.query(models.Payment).all()
 
