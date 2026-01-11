@@ -3,7 +3,7 @@ import pika
 import os
 from typing import Optional
 
-RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "rabbitmq")
 
 # 1. Setup global connection/channel (or use a singleton pattern)
 def get_channel():
@@ -44,7 +44,7 @@ def publish_payment_confirmed(payment_id: int, order_id: int, status: str, user_
             body=json.dumps(event).encode("utf-8"),
             properties=pika.BasicProperties(delivery_mode=2),
         )
-        print(f"Successfully published order {order_id}")
+        print(f"Successfully published order confirmed {order_id}")
 
     except pika.exceptions.AMQPConnectionError:
         print("ERROR: Could not connect to RabbitMQ. Check if the service is running.")

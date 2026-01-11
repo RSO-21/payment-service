@@ -4,10 +4,21 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db_session as get_db, engine, Base
 from prometheus_fastapi_instrumentator import Instrumentator
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Payments Microservice", version="1.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:4200",  # Angular dev
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(payments_router, prefix="/payments")
 
 Instrumentator().instrument(app).expose(app)

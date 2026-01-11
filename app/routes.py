@@ -67,8 +67,12 @@ def notify_order_service(order_id: int):
     # TODO: replace with real HTTP/gRPC call later
     print(f"[PAYMENT] Order {order_id} marked as PAID")
 
-@router.post("/{payment_id}/confirm", response_model=PaymentResponse)
-def confirm_payment(payment_id: int, external_id: str, db: Session = Depends(get_db_with_schema), tenant_id: str = Depends(get_tenant_id)):
+@router.post("/orders/{order_id}/confirm", response_model=PaymentResponse)
+def confirm_payment_for_order(
+    order_id: int,
+    external_id: str, db: Session = Depends(get_db_with_schema),
+    tenant_id: str = Depends(get_tenant_id),
+):
     lookup = db.query(models.PaymentLookup).filter(
         models.PaymentLookup.external_id == external_id
     ).first()
@@ -80,24 +84,25 @@ def confirm_payment(payment_id: int, external_id: str, db: Session = Depends(get
     tenant_id = lookup.tenant_id
     db.execute(text(f"SET search_path TO {tenant_id}"))
 
-    payment = db.query(models.Payment).filter(models.Payment.id == payment_id).first()
+    payment = db.query(models.Payment).filter(
+        models.Payment.order_id == order_id
+    ).first()
+
     if not payment:
-        raise HTTPException(status_code=404, detail="Payment not found")
-    
+        raise HTTPException(404, "Payment not found")
+
     payment.payment_status = "PAID"
     db.commit()
     db.refresh(payment)
 
-    try:
-        publish_payment_confirmed(
-            payment.id,
-            payment.order_id,
-            payment.payment_status,
-            user_id=str(payment.user_id),
-            amount=float(payment.amount),
-            tenant_id=tenant_id
-        )
-    except Exception as exc:
-        logger.error("Failed to publish payment_confirmed event: %s", exc, exc_info=True)
-    
+    publish_payment_confirmed(
+        payment.id,
+        payment.order_id,
+        payment.payment_status,
+        user_id=str(payment.user_id),
+        amount=float(payment.amount),
+        tenant_id=tenant_id
+    )
+
     return payment
+
