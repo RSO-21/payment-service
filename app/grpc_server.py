@@ -13,9 +13,6 @@ class PaymentServicer(payment_pb2_grpc.PaymentServiceServicer):
         metadata = dict(context.invocation_metadata())
         tenant_id = metadata.get('x-tenant-id', 'public')
         
-
-        # 2. Use 'with' to drive the generator and get the actual session
-        # This handles the try/finally/close automatically
         with get_db_session(schema=tenant_id) as db:
             payment = models.Payment(
                 order_id=request.order_id,
@@ -28,11 +25,22 @@ class PaymentServicer(payment_pb2_grpc.PaymentServiceServicer):
             )
 
             db.add(payment)
+            db.flush()
+
+            lookup = models.PaymentLookup(
+                payment_id=payment.id,
+                tenant_id=tenant_id,
+                order_id=payment.order_id
+            )
+            db.add(lookup)
+            db.flush() 
+
             db.commit()
             db.refresh(payment)
 
             return payment_pb2.PaymentResponse(
                 payment_id=payment.id,
+                external_id=lookup.external_id,
                 order_id=payment.order_id,
                 status=payment.payment_status
             )

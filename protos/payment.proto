@@ -23,6 +23,7 @@ message ConfirmPaymentRequest {
 
 message PaymentResponse {
     int32 payment_id = 1;
-    int32 order_id = 2;
-    string status = 3;
+    string external_id = 2;
+    int32 order_id = 3;
+    string status = 4;
 }

@@ -27,3 +27,19 @@ class Payment(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class PaymentLookup(Base):
+    __tablename__ = "payment_lookup"
+    __table_args__ = {"schema": "public"}
+
+    external_id = Column(
+        String(255),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4()),
+        nullable=False
+    )
+
+    payment_id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(String(100), nullable=False)
+    order_id = Column(Integer, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
