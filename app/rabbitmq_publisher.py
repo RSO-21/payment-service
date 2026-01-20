@@ -4,6 +4,8 @@ import os
 from typing import Optional
 
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "rabbitmq")
+QUEUE_NAME = os.getenv("PAYMENT_CONFIRMED_QUEUE", "payment_confirmed")
+
 
 # 1. Setup global connection/channel (or use a singleton pattern)
 def get_channel():
@@ -14,17 +16,19 @@ def get_channel():
 
 def publish_payment_confirmed(payment_id: int, order_id: int, status: str, user_id: str, amount: float, tenant_id: Optional[str] = None) -> None:
     connection = None
+    print("Publishing payment confirmed")
     try:
         # Set a 5-second timeout so your web app doesn't hang
         parameters = pika.ConnectionParameters(
             host=RABBITMQ_HOST, 
             heartbeat=600, 
             blocked_connection_timeout=300,
-            connection_attempts=3,
-            retry_delay=1
+            connection_attempts=5,
+            retry_delay=2
         )
         connection = pika.BlockingConnection(parameters)
         channel = connection.channel()
+        channel.confirm_delivery()
         
         channel.queue_declare(queue="payment_confirmed", durable=True)
         
@@ -44,6 +48,12 @@ def publish_payment_confirmed(payment_id: int, order_id: int, status: str, user_
             body=json.dumps(event).encode("utf-8"),
             properties=pika.BasicProperties(delivery_mode=2),
         )
+        channel.basic_publish(
+        exchange="",
+        routing_key="payment_confirmed",
+        body=json.dumps(event).encode("utf-8"),
+        properties=pika.BasicProperties(delivery_mode=2),
+    )
         print(f"Successfully published order confirmed {order_id}")
 
     except pika.exceptions.AMQPConnectionError:
