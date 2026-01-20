@@ -1,4 +1,5 @@
 # payment_service/server.py
+import logging
 import grpc
 from concurrent import futures
 from app import models, database
@@ -37,7 +38,8 @@ class PaymentServicer(payment_pb2_grpc.PaymentServiceServicer):
 
             db.commit()
             db.refresh(payment)
-
+            logging.info(f"External id in CreatePayment {lookup.external_id}")
+            print("External id in CreatePayment ",lookup.external_id)
             return payment_pb2.PaymentResponse(
                 payment_id=payment.id,
                 external_id=lookup.external_id,
