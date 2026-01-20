@@ -48,12 +48,7 @@ def publish_payment_confirmed(payment_id: int, order_id: int, status: str, user_
             body=json.dumps(event).encode("utf-8"),
             properties=pika.BasicProperties(delivery_mode=2),
         )
-        channel.basic_publish(
-        exchange="",
-        routing_key="payment_confirmed",
-        body=json.dumps(event).encode("utf-8"),
-        properties=pika.BasicProperties(delivery_mode=2),
-    )
+   
         print(f"Successfully published order confirmed {order_id}")
 
     except pika.exceptions.AMQPConnectionError:
